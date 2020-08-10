@@ -87,3 +87,6 @@ Invoke-Command -Credential $credential -VMName SERVER1 -ScriptBlock {
     ADD-Computer -DomainName waslab.local -credential waslab\administrator -Restart
 }
 
+Stop-VM -Name SERVER1 
+
+CheckPoint-VM -Name SERVER1 -SnapshotName BASELINE
