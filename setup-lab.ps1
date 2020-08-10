@@ -136,3 +136,53 @@ Invoke-Command -Credential admin -VMName CLIENT -ScriptBlock {
 Stop-VM -Name CLIENT 
 
 CheckPoint-VM -Name CLIENT -SnapshotName BASELINE
+
+# SET UP ROUTER AND SERVER2
+Start-VM -Name ROUTER, SERVER2
+
+Enter-PSSession -VMName ROUTER -Credential $credential
+
+Set-TimeZone -Id UTC 
+
+$ifx1 = (Get-NetAdapter | Where -Property InterfaceDescription -eq "Microsoft Hyper-V Network Adapter #2").InterfaceIndex
+$ifx2 = (Get-NetAdapter | Where -Property InterfaceDescription -eq "Microsoft Hyper-V Network Adapter #3").InterfaceIndex
+
+New-NetIPAddress -InterfaceIndex $ifx1 -PrefixLength 8 -IPAddress 10.0.0.1
+Set-DnsClientServerAddress -InterfaceIndex $ifx1 -ServerAddresses 10.0.0.100
+New-NetIPAddress -InterfaceIndex $ifx2 -PrefixLength 24 -IPAddress 192.168.0.1
+Get-NetIpConfiguration
+
+Rename-Computer -NewName ROUNTER -Restart;exit 
+
+Start-VM -Name ROUTER 
+
+Invoke-Command -VMName ROUTER -credential waslab\administrator {
+    ADD-Computer -WorkgroupName WORKGROUP -LocalCredential administrator -Restart 
+}
+
+Stop-VM -Name ROUTER 
+
+CheckPoint-VM -Name ROUTER -SnapshotName BASELINE
+
+
+#SET UP SERVER 2
+Enter-PSSession -VMName SERVER2 -Credential $credential
+
+Set-TimeZone -Id UTC 
+
+$ifx = (Get-NetAdapter).InterfaceIndex 
+
+New-NetIPAddress -InterfaceIndex $ifx -PrefixLength 24 -IPAddress 192.168.0.2 -DefaultGateway 192.168.0.1
+Set-DnsClientServerAddress -InterfaceIndex $ifx -ServerAddresses 10.0.0.100
+Get-NetIpConfiguration
+
+Rename-Computer -NewName SERVER2 -Restart;exit 
+
+Stop-VM -Name SERVER2 
+
+CheckPoint-VM -Name SERVER2 -SnapshotName BASELINE
+
+Stop-VM -Name DC
+CheckPoint-VM -Name DC -SnapshotName BASELINE
+
+# REFACTOR THE ENTIRE SCRIPT TO DO IT MORE PROGRAMMATICALLY AND WITH THE EXACT AMOUNT OF MEMORY 8GB, OR MORE
