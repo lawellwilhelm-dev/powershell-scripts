@@ -83,3 +83,7 @@ Get-NetIpConfiguration
 
 Rename-Computer -NewName SERVER1 -Restart;exit 
 
+Invoke-Command -Credential $credential -VMName SERVER1 -ScriptBlock {
+    ADD-Computer -DomainName waslab.local -credential waslab\administrator -Restart
+}
+
