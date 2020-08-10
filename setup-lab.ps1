@@ -42,5 +42,44 @@ foreach ($disk in $Disks) {
     Write-Verbose -Message ($vm[0] + " Created successfully") -Verbose
     $count++;
 }
+#NOTE: Can refactor it to create two function CreateDiffencingDisk and CreateVMs
 
 #SETUP VIRTUAL MACHINES
+#NOTE: I don't have enough memory to set all of them at once
+
+#SET UP DC
+$credential = Get-Credential
+
+Enter-PSSession -VMName DC -Credential $credential
+
+Set-TimeZone -Id UTC 
+
+$ifx = (Get-NetAdapter).InterfaceIndex 
+
+New-NetIPAddress -InterfaceIndex $ifx -PrefixLength 8 -IPAddress 10.0.0.100 -DefaultGateway 10.0.0.1
+Set-DnsClientServerAddress -InterfaceIndex $ifx -ServerAddresses 10.0.0.100
+Get-NetIpConfiguration
+
+Rename-Computer -NewName DC -Restart;exit 
+
+# Set up primary domain controller
+Install-WindowsFeature -Name AD-Domain-Services
+Install-ADDSForest -DomainName waslab.local -InstallDns
+
+$domainCredentials = Get-Credential
+Invoke-Command -VMName DC -Credential $domainCredentials -ScriptBlock {Get-NetIPConfiguration}
+
+
+#SET UP SERVER 1
+Enter-PSSession -VMName SERVER1 -Credential $credential
+
+Set-TimeZone -Id UTC 
+
+$ifx = (Get-NetAdapter).InterfaceIndex 
+
+New-NetIPAddress -InterfaceIndex $ifx -PrefixLength 8 -IPAddress 10.0.0.101 -DefaultGateway 10.0.0.1
+Set-DnsClientServerAddress -InterfaceIndex $ifx -ServerAddresses 10.0.0.100
+Get-NetIpConfiguration
+
+Rename-Computer -NewName SERVER1 -Restart;exit 
+
