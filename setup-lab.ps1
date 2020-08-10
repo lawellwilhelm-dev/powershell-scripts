@@ -90,3 +90,49 @@ Invoke-Command -Credential $credential -VMName SERVER1 -ScriptBlock {
 Stop-VM -Name SERVER1 
 
 CheckPoint-VM -Name SERVER1 -SnapshotName BASELINE
+
+#SET CLIENT & CORE 
+Start-VM -Name CLIENT, CORE
+
+#SET UP CORE
+Enter-PSSession -VMName CORE -Credential $credential
+
+Set-TimeZone -Id UTC 
+
+$ifx = (Get-NetAdapter).InterfaceIndex 
+
+New-NetIPAddress -InterfaceIndex $ifx -PrefixLength 8 -IPAddress 10.0.0.103 -DefaultGateway 10.0.0.1
+Set-DnsClientServerAddress -InterfaceIndex $ifx -ServerAddresses 10.0.0.100
+Get-NetIpConfiguration
+
+Rename-Computer -NewName CORE -Restart;exit 
+
+Invoke-Command -Credential $credential -VMName CORE -ScriptBlock {
+    ADD-Computer -DomainName waslab.local -credential waslab\administrator -Restart
+}
+
+Stop-VM -Name CORE 
+
+CheckPoint-VM -Name CORE -SnapshotName BASELINE
+
+
+#SET UP CLIENT
+Enter-PSSession -VMName CLIENT -Credential admin
+
+Set-TimeZone -Id UTC 
+
+$ifx = (Get-NetAdapter).InterfaceIndex 
+
+New-NetIPAddress -InterfaceIndex $ifx -PrefixLength 8 -IPAddress 10.0.0.102 -DefaultGateway 10.0.0.1
+Set-DnsClientServerAddress -InterfaceIndex $ifx -ServerAddresses 10.0.0.100
+Get-NetIpConfiguration
+
+Rename-Computer -NewName CLIENT -Restart;exit 
+
+Invoke-Command -Credential admin -VMName CLIENT -ScriptBlock {
+    ADD-Computer -DomainName waslab.local -credential waslab\administrator -Restart
+}
+
+Stop-VM -Name CLIENT 
+
+CheckPoint-VM -Name CLIENT -SnapshotName BASELINE
