@@ -144,8 +144,8 @@ Enter-PSSession -VMName ROUTER -Credential $credential
 
 Set-TimeZone -Id UTC 
 
-$ifx1 = (Get-NetAdapter | Where -Property InterfaceDescription -eq "Microsoft Hyper-V Network Adapter #2").InterfaceIndex
-$ifx2 = (Get-NetAdapter | Where -Property InterfaceDescription -eq "Microsoft Hyper-V Network Adapter #3").InterfaceIndex
+$ifx1 = (Get-NetAdapter | Where-Object -Property InterfaceDescription -eq "Microsoft Hyper-V Network Adapter #2").InterfaceIndex
+$ifx2 = (Get-NetAdapter | Where-Object -Property InterfaceDescription -eq "Microsoft Hyper-V Network Adapter #3").InterfaceIndex
 
 New-NetIPAddress -InterfaceIndex $ifx1 -PrefixLength 8 -IPAddress 10.0.0.1
 Set-DnsClientServerAddress -InterfaceIndex $ifx1 -ServerAddresses 10.0.0.100
